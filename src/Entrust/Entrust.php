@@ -1,5 +1,7 @@
 <?php namespace Zizaco\Entrust;
 
+use Illuminate\Contracts\Foundation\Application;
+
 /**
  * This class is the main entry point of entrust. Usually this the interaction
  * with this class will be done through the Entrust Facade
@@ -24,7 +26,7 @@ class Entrust
      *
      * @return void
      */
-    public function __construct($app)
+    public function __construct(Application $app)
     {
         $this->app = $app;
     }
@@ -68,7 +70,7 @@ class Entrust
      */
     public function user()
     {
-        return $this->app->auth->user();
+        return $this->app->make('auth')->user();
     }
 
     /**
@@ -98,11 +100,11 @@ class Entrust
         };
 
         // Same as Route::filter, registers a new filter
-        $this->app->router->filter($filterName, $closure);
+        $this->app->make('router')->filter($filterName, $closure);
 
         // Same as Route::when, assigns a route pattern to the
         // previously created filter.
-        $this->app->router->when($route, $filterName);
+        $this->app->make('router')->when($route, $filterName);
     }
 
     /**
@@ -132,11 +134,11 @@ class Entrust
         };
 
         // Same as Route::filter, registers a new filter
-        $this->app->router->filter($filterName, $closure);
+        $this->app->make('router')->filter($filterName, $closure);
 
         // Same as Route::when, assigns a route pattern to the
         // previously created filter.
-        $this->app->router->when($route, $filterName);
+        $this->app->make('router')->when($route, $filterName);
     }
 
     /**
@@ -175,10 +177,10 @@ class Entrust
         };
 
         // Same as Route::filter, registers a new filter
-        $this->app->router->filter($filterName, $closure);
+        $this->app->make('router')->filter($filterName, $closure);
 
         // Same as Route::when, assigns a route pattern to the
         // previously created filter.
-        $this->app->router->when($route, $filterName);
+        $this->app->make('router')->when($route, $filterName);
     }
 }

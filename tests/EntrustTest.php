@@ -66,7 +66,7 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Set
         |------------------------------------------------------------
         */
-        $app = new stdClass();
+        $app = m::mock('Illuminate\Contracts\Foundation\Application');
         $entrust = m::mock('Zizaco\Entrust\Entrust[user]', [$app]);
         $user = m::mock('_mockedUser');
 
@@ -110,7 +110,7 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Set
         |------------------------------------------------------------
         */
-        $app = new stdClass();
+        $app = m::mock('Illuminate\Contracts\Foundation\Application');
         $entrust = m::mock('Zizaco\Entrust\Entrust[user]', [$app]);
         $user = m::mock('_mockedUser');
 
@@ -154,8 +154,8 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Set
         |------------------------------------------------------------
         */
-        $app = new stdClass();
-        $app->auth = m::mock('Auth');
+        $app = m::mock('Illuminate\Contracts\Foundation\Application');
+        $auth = m::mock('Auth');
         $entrust = new Entrust($app);
         $user = m::mock('_mockedUser');
 
@@ -164,7 +164,11 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Expectation
         |------------------------------------------------------------
         */
-        $app->auth->shouldReceive('user')
+        $app->shouldReceive('make')
+            ->once()->with('auth')
+            ->andReturn($auth);
+
+        $auth->shouldReceive('user')
             ->andReturn($user)
             ->once();
 
@@ -183,8 +187,8 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Set
         |------------------------------------------------------------
         */
-        $app = new stdClass();
-        $app->router = m::mock('Route');
+        $app = m::mock('Illuminate\Contracts\Foundation\Application');
+        $router = m::mock('Route');
         $entrust = new Entrust($app);
 
         $route = 'route';
@@ -199,11 +203,15 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Expectation
         |------------------------------------------------------------
         */
-        $app->router->shouldReceive('filter')
+        $app->shouldReceive('make')
+            ->times(4)->with('router')
+            ->andReturn($router);
+
+        $router->shouldReceive('filter')
             ->with(m::anyOf($oneRoleFilterName, $manyRoleFilterName), m::type('Closure'))
             ->twice()->ordered();
 
-        $app->router->shouldReceive('when')
+        $router->shouldReceive('when')
             ->with($route, m::anyOf($oneRoleFilterName, $manyRoleFilterName))
             ->twice();
 
@@ -223,8 +231,8 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Set
         |------------------------------------------------------------
         */
-        $app = new stdClass();
-        $app->router = m::mock('Route');
+        $app = m::mock('Illuminate\Contracts\Foundation\Application');
+        $router = m::mock('Route');
         $entrust = new Entrust($app);
 
         $route = 'route';
@@ -239,11 +247,15 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Expectation
         |------------------------------------------------------------
         */
-        $app->router->shouldReceive('filter')
+        $app->shouldReceive('make')
+            ->times(4)->with('router')
+            ->andReturn($router);
+
+        $router->shouldReceive('filter')
             ->with(m::anyOf($onePermFilterName, $manyPermFilterName), m::type('Closure'))
             ->twice()->ordered();
 
-        $app->router->shouldReceive('when')
+        $router->shouldReceive('when')
             ->with($route, m::anyOf($onePermFilterName, $manyPermFilterName))
             ->twice();
 
@@ -263,8 +275,8 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Set
         |------------------------------------------------------------
         */
-        $app = new stdClass();
-        $app->router = m::mock('Route');
+        $app = m::mock('Illuminate\Contracts\Foundation\Application');
+        $router = m::mock('Route');
         $entrust = new Entrust($app);
 
         $route = 'route';
@@ -283,7 +295,11 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         | Expectation
         |------------------------------------------------------------
         */
-        $app->router->shouldReceive('filter')
+        $app->shouldReceive('make')
+            ->times(8)->with('router')
+            ->andReturn($router);
+
+        $router->shouldReceive('filter')
             ->with(
                 m::anyOf(
                     $oneRoleOnePermFilterName,
@@ -295,7 +311,7 @@ class EntrustTest extends PHPUnit_Framework_TestCase
             )
             ->times(4)->ordered();
 
-        $app->router->shouldReceive('when')
+        $router->shouldReceive('when')
             ->with(
                 $route,
                 m::anyOf(
@@ -349,8 +365,8 @@ class EntrustTest extends PHPUnit_Framework_TestCase
     protected function filterTestExecution($methodTested, $mockedMethod, $returnValue, $filterTest, $abort, $expectedResponse)
     {
         // Mock Objects
-        $app         = m::mock('Illuminate\Foundation\Application');
-        $app->router = m::mock('Route');
+        $app         = m::mock('Illuminate\Contracts\Foundation\Application');
+        $router = m::mock('Route');
         $entrust     = m::mock("Zizaco\Entrust\Entrust[$mockedMethod]", [$app]);
 
         // Static values
@@ -358,8 +374,12 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         $methodValue = 'role-or-permission';
         $filterName  = $this->makeFilterName($route, [$methodValue]);
 
-        $app->router->shouldReceive('when')->with($route, $filterName)->once();
-        $app->router->shouldReceive('filter')->with($filterName, m::on($this->$filterTest))->once();
+        $app->shouldReceive('make')
+            ->twice()->with('router')
+            ->andReturn($router);
+
+        $router->shouldReceive('when')->with($route, $filterName)->once();
+        $router->shouldReceive('filter')->with($filterName, m::on($this->$filterTest))->once();
 
         if ($abort) {
             $app->shouldReceive('abort')->with(403)->andThrow('Exception', 'abort')->once();
@@ -399,8 +419,8 @@ class EntrustTest extends PHPUnit_Framework_TestCase
     public function testFilterGeneratedByRouteNeedsRoleOrPermission(
         $roleIsValid, $permIsValid, $filterTest, $requireAll = false, $abort = false, $expectedResponse = null
     ) {
-        $app         = m::mock('Illuminate\Foundation\Application');
-        $app->router = m::mock('Route');
+        $app         = m::mock('Illuminate\Contracts\Foundation\Application');
+        $router = m::mock('Route');
         $entrust     = m::mock('Zizaco\Entrust\Entrust[hasRole, can]', [$app]);
 
         // Static values
@@ -409,8 +429,12 @@ class EntrustTest extends PHPUnit_Framework_TestCase
         $permName   = 'user-permission';
         $filterName = $this->makeFilterName($route, [$roleName], [$permName]);
 
-        $app->router->shouldReceive('when')->with($route, $filterName)->once();
-        $app->router->shouldReceive('filter')->with($filterName, m::on($this->$filterTest))->once();
+        $app->shouldReceive('make')
+            ->twice()->with('router')
+            ->andReturn($router);
+
+        $router->shouldReceive('when')->with($route, $filterName)->once();
+        $router->shouldReceive('filter')->with($filterName, m::on($this->$filterTest))->once();
 
         $entrust->shouldReceive('hasRole')->with($roleName, $requireAll)->andReturn($roleIsValid)->once();
         $entrust->shouldReceive('can')->with($permName, $requireAll)->andReturn($permIsValid)->once();
